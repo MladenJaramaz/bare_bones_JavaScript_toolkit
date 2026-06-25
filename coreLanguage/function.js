@@ -1,12 +1,12 @@
 'use strict';
-
 // check if value provided as an argument is a function
 function isFunction(value) {return Object.prototype.toString.call(value) === '[object Function]';}
-// higher-order function returning a logical negation of the return value from a function passed as an argument to a higher-order function
+// higher-order function returning a logical negation of the return value from a function 
+// passed as an argument to a higher-order function
 function not(func) {return function() {return !func.apply(this, arguments);}}
 // higher-order function returning a new function that computes f(g(...))
 function compose(f, g) {return function() {return f.call(this, g.apply(this, arguments))};}
-// partially apply arguments to the beggining of the argument list
+// partially apply arguments to the beginning of the argument list
 function leftPartialApplication(f) {
 
     const argumentsArray = convertArrayLikeObjects(arguments);
@@ -56,6 +56,6 @@ Function.prototype.defineSubclass = function(constructor /* subclass constructor
 // return the name of a function (may be '') or null for non-functions
 Function.prototype.getName = function() {
 
-    if ('name' in this) return this.name; // operator in is used beause this.name may return inherited property 'name'
+    if ('name' in this) return this.name; // operator in is used because this.name may return inherited property 'name'
     return this.name.toString().match(/function\s*([^(]*)\(/)[1];
 };

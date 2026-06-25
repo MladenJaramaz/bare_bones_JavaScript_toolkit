@@ -1,12 +1,5 @@
 'use strict';
-// POSSIBLE IMPROVMENTS: add check if arguments are true intiger numbers for all of the functions below
 
-function getFactorialBook(x) {
-
-    if (x <= 0) throw new Error('x must be a positive, non-zero number.')
-    for (var factorial = 1; x > 1; factorial *= x, x--) /* empty */;
-    return factorial;    
-}
 function getFactorial(x) {
 
     if (x <= 0) throw new Error('x must be a positive, non-zero number.')
@@ -26,24 +19,24 @@ function getFactorialCachedOrComputed(x) {
         } else return getFactorialCachedOrComputed[x]; 
     } else return NaN;
 }
-// generate greatest common divisor of 2 integers usin Euclidian algorithm
+// initialize the cache to hold this base case
+getFactorialCachedOrComputed[1] = 1;
+// generate greatest common divisor of 2 integers using Euclidean algorithm
 function greatestCommonDivisor(num1, num2) {
 
     let temp; // temporary variable for swapping values
-    if (num1 < num2) { // ensure that num1 >= num2
+    if (num1 < num2) {
         temp = num2;
         num2 = num1;
         num1 = temp;
     }
-    while (b !== 0) {
+    while (num2 !== 0) {
         temp = num2;
         num2 = num1 % num2;
         num1 = temp;
     }
     return num1;
 }
-// initialize the cache to hold this base case
-getFactorialCachedOrComputed[1] = 1;
 // test if even number
 function isEvenNumber(x) {return x % 2 === 0;}
 // test if odd number

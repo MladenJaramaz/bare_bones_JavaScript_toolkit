@@ -1,53 +1,4 @@
 'use strict';
-// a class to represent complex numbers
-function Complex(real, imaginary) {
-
-    if (isNaN(real) || isNaN(imaginary)) throw new TypeError('Both arguments to Comples() must be number type.');
-    this.real = real;
-    this.imaginary = imaginary;
-}
-// class fields holding some of the mostly-used complex numbers
-// uppercase names indicates they should be read-only (they could be really read-only useing Object.defineProperty() or Object.seal() or Object.freeze() methods)
-Complex.ZERO = new Complex(0, 0);
-Complex.ONE = new Complex(1, 0);
-Complex.I = new Complex(0, 1);
-// a 'private' class field with name beginning with _ indicating that it is intended only for internal use, not as a part of the public API of this class
-Complex._format = /^\{([^,]+),([^}]+)\}/;
-// add a complex number to an existing instance and return a new value
-Complex.prototype.add = function(added) {return new Complex(this.real + added.real, this.imaginary + added.imaginary);};
-// multiply complex number with an existing instance and return a new value
-Complex.prototype.multiply = function(multiplier) {return new Complex(this.real * multiplier.real - this.imaginary * multiplier.imaginary, 
-                                                                    this.real * multiplier.imaginary - this.imaginary * multiplier.real);};
-// return magnitude of a complex number, defined by its distance from (0, 0) origin of the complex plane
-Complex.prototype.magniude = function() {return Math.sqrt(this.real * this.real - this.imaginary * this.imaginary);};
-// return a complex number that is a negative of an existing instance
-Complex.prototype.negative = function() {return new Complex(-this.real, -this.imaginary);};
-// convert an instance of this class to a string in a menaingfull way
-Complex.prototype.toString = function() {return `Real: ${this.real}, Imaginary: ${this.imaginary}`;};
-// test for equallity
-Complex.prototype.equallityTest = function(equallityCandidate) {return equallityCandidate !== null && equallityCandidate.constructor === Complex
-                                                                        && this.real === equallityCandidate.real && this.imaginary === equallityCandidate.imaginary;};
-// this is a class method to parse string returned by toString() mehod and return a Complex() object
-Complex.parse = function(string) {
-    
-    try {
-        // assume that parsing wil succeed
-        const m = Complex._format.exec(string);
-        return new Complex(parseFloat(m[1]), parseFloat(m[2]));
-    } catch (error) {
-        throw new TypeError(`Can't parse ${string} as a complex number.`);
-    }
-}
-
-
-
-
-
-
-
-
-
-
 // a class with instances representing unordered collections of values, with no duplicates
 function CustomSet() {
 
@@ -58,19 +9,18 @@ function CustomSet() {
     // otherwise add all the arguments
     else this.add.apply(this, arguments); // enable instancing this class with no limit on number of arguments
 }
-// since constructor function is not able to create a CustomSet instance with array as its only element, add a factory function for that case
+// since constructor function is not able to create a CustomSet instance with array as its only element
+// add a factory function for that case
 CustomSet.fromSingleArray = function(arr) {
 
     const customSet = new CustomSet();
     customSet.add.call(customSet, arr);
-    return CustomSet; // since this is a factory, not a constructor function, newly created instance has to be explicitl returned
+    return customSet; // since this is a factory, not a constructor function, newly created instance has to be explicitl returned
 }
-// a 'private' class method with name beginning with _ indicating that it is intended only for internal use, not as a part of the public API of this class
 CustomSet._valueToString = function(value) {
 
     if (value !== value) return 'NaN';
-    switch(value) {
-        
+    switch(value) {     
         case undefined: return 'undefined';
         case null: return 'null';
         case true: return 'true';
@@ -93,6 +43,17 @@ CustomSet._valueToString = function(value) {
     }
 }
 CustomSet._valueToString.next = 0; // define a starting point for this property
+CustomSet.prototype.remove = function() {
+
+    for (let i = 0; i < arguments.length; i++) { // for each argument
+        const valueString = CustomSet._valueToString(arguments[i]); // generate string key from a value
+        if (this.values.hasOwnProperty(valueString)) { // if it is in the set 
+            delete this.values[valueString]; // remove it
+            this.valuesCount --; // decrease set size count
+        }
+    }
+    return this; // IMPORTANT: support chained method calls
+};
 CustomSet.prototype.add = function() {
 
     for (let i = 0; i < arguments.length; i++) { // for each argument
@@ -101,17 +62,6 @@ CustomSet.prototype.add = function() {
         if (!this.values.hasOwnProperty(valueString)) { // if not already in set 
             this.values[valueString] = value; // map string to value
             this.valuesCount ++; // increase set size count
-        }
-    }
-    return this; // IMPORTANT: support chained method calls
-};
-CustomSet.prototype.remove = function() {
-
-    for (let i = 0; i < arguments.length; i++) { // for each argument
-        const valueString = CustomSet._valueToString(arguments[i]); // generate string key from a value
-        if (this.values.hasOwnProperty(valueString)) { // if it is in the set 
-            delete this.values[valueString]; // remove it
-            this.valuesCount --; // decrease set size count
         }
     }
     return this; // IMPORTANT: support chained method calls
@@ -128,6 +78,24 @@ CustomSet.prototype.forEach = function(func, context) {
         if (values.hasOwnProperty(elementKey)) { // skip inherited properties
             func.call(context, values[elementKey]);
         }
+    }
+}; 
+// function testing if CustomSet instance can be treated as equal to its argument
+CustomSet.prototype.equals = function(potentialEquality) {
+    // shortcut for trivial cases
+    if (this === potentialEquality) return true;
+    // now reject every object that is not a CustomSet instance
+    // using instanceof to allow any subclass of Custom Set 
+    if (!(potentialEquality instanceof CustomSet)) return false;
+    // check if they have equal sizes
+    if (this.size() !== potentialEquality.size()) return false;
+    // finally check if they contain all of the same elements
+    // use throw to potentially break out of forEach()
+    try {
+        this.forEach(function(value) {if (!potentialEquality.contains(value)) throw false;});
+    } catch (err) {
+        if (err === false) return false; // if false is thrown equality is non existent, return false
+        throw err; // some other error, re-throw it
     }
 };
 // extend CustomSet's prototype
@@ -159,25 +127,7 @@ objExtend(CustomSet.prototype, {
         this.forEach(function(value) {arr.push(value);});
         return arr;
     }
-}); 
-// function testing if CustomSet instance can be treated as equal to its argument, even if it is not another CustomSet instance object
-CustomSet.prototype.equals = function(potentialEquality) {
-    // shortcut for trivial cases
-    if (this === potentialEquality) return true;
-    // now reject every object that is not a CustomSet instance
-    // using instanceof to allow any subclass of Custom Set 
-    if (!(potentialEquality instanceof CustomSet)) return false;
-    // check if they have equal sizes
-    if (this.size() !== potentialEquality.size()) return false;
-    // finally check if they contain all of the same elements
-    // use throw to potentially break out of forEach()
-    try {
-        this.forEach(function(value) {if (!potentialEquality.contains(value)) throw false;});
-    } catch (err) {
-        if (err === false) return false; // if false is thrown equality is non existent, return false
-        throw err; // some other error, re-throw it
-    }
-};
+});
 /****************************************************************************************************************************************************************************************/
 // create a CustomSet subclass that is read-only and has only one constant member
 function SingletonCustomSet(member) {this.member = member;}
@@ -192,17 +142,18 @@ objExtend(SingletonCustomSet.prototype, {
     remove() {throw Error('This is a read-only set.');},
     // size is always 1
     size() {return 1;},
-    // addapt forEach mehod- since there is only 1 member, invoke the function for it and stop
+    // adapt forEach method- since there is only 1 member, invoke the function for it and stop
     forEach(func, context) {func.call(context, this.member);},
-    // simplfy contains()
+    // simplify contains()
     contains(member) {return member === this.member},
-    // simplfy equals()
-    equals(equallityCandidate) {return equallityCandidate instanceof CustomSet && equallityCandidate.size() === 1 && equallityCandidate.contains(this.member)},
+    // simplify equals()
+    equals(equalityCandidate) {return equalityCandidate instanceof CustomSet && equalityCandidate.size() === 1 
+                                                                             && equalityCandidate.contains(this.member)},
 });
 /****************************************************************************************************************************************************************************************/
 // create a CustomSet subclass that does not allow null and undefined as members of the set
 function NonNullCustomSet() {
-    // chain to CustomSet supercalss by invoking CustomSet constructor - constructor chaining 
+    // chain to CustomSet superclass by invoking CustomSet constructor - constructor chaining 
     CustomSet.apply(this, arguments);
 }
 // use prototypes to make NonNullCustomSet a subclass of CustomSet
@@ -220,7 +171,7 @@ NonNullCustomSet.prototype.add = function() {
     return CustomSet.prototype.add.apply(this, arguments);
 };
 /****************************************************************************************************************************************************************************************/
-// define a CustomSet subclass that aplies a specified filter to its add() method
+// define a CustomSet subclass that applies a specified filter to its add() method
 const FilteredCustomSet = CustomSet.defineSubclass(
     /************ constructor ************/
     function(set, filter) {
@@ -254,3 +205,46 @@ const FilteredCustomSet = CustomSet.defineSubclass(
 );
 // a CustomSet containing only strings
 const stringsOnly = new FilteredCustomSet(new CustomSet(), function(value) {return typeof value === 'string';});
+/****************************************************************************************************************************************************************************************/
+/****************************************************************************************************************************************************************************************/
+/****************************************************************************************************************************************************************************************/
+// a class to represent complex numbers
+function Complex(real, imaginary) {
+
+    if (isNaN(real) || isNaN(imaginary)) throw new TypeError('Both arguments to Complex() must be number type.');
+    this.real = real;
+    this.imaginary = imaginary;
+}
+// class fields holding some of the mostly-used complex numbers
+// uppercase names indicates they should be read-only (they could be truly read-only using Object.defineProperty() or Object.seal() or Object.freeze() methods)
+Complex.ZERO = new Complex(0, 0);
+Complex.ONE = new Complex(1, 0);
+Complex.I = new Complex(0, 1);
+// a 'private' class field with name beginning with _ indicating that it is intended only for internal use
+// not intended to be a part of the public API of this class
+Complex._format = /^\{([^,]+),([^}]+)\}/;
+// add a complex number to an existing instance and return a new value
+Complex.prototype.add = function(added) {return new Complex(this.real + added.real, this.imaginary + added.imaginary);};
+// multiply complex number with an existing instance and return a new value
+Complex.prototype.multiply = function(multiplier) {return new Complex(this.real * multiplier.real - this.imaginary * multiplier.imaginary, 
+                                                                    this.real * multiplier.imaginary - this.imaginary * multiplier.real);};
+// return magnitude of a complex number, defined by its distance from (0, 0) origin of the complex plane
+Complex.prototype.magnitude = function() {return Math.sqrt(this.real * this.real - this.imaginary * this.imaginary);};
+// return a complex number that is a negative of an existing instance
+Complex.prototype.negative = function() {return new Complex(-this.real, -this.imaginary);};
+// convert an instance of this class to a string in a meaningful way
+Complex.prototype.toString = function() {return `Real: ${this.real}, Imaginary: ${this.imaginary}`;};
+// test for equality
+Complex.prototype.equalityTest = function(equalityCandidate) {return equalityCandidate !== null && equalityCandidate.constructor === Complex
+                                                                        && this.real === equalityCandidate.real && this.imaginary === equalityCandidate.imaginary;};
+// this is a class method to parse string returned by toString() method and return a Complex() object
+Complex.parse = function(string) {
+    
+    try {
+        // assume that parsing wil succeed
+        const m = Complex._format.exec(string);
+        return new Complex(parseFloat(m[1]), parseFloat(m[2]));
+    } catch (error) {
+        throw new TypeError(`Can't parse ${string} as a complex number.`);
+    }
+}

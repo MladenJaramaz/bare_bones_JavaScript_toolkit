@@ -1,7 +1,5 @@
 'use strict';
-
 // define a properties() method in Object.prototype returning an object representing the named properties of object on which it is invoked
-// returning an object representing all own properties of object on which it is invoked if invoked with no arguments
 // object defines 4 additional useful methods
 (function namespace() {
     // all wrapped in a private function scope, this function becomes a method for all objects
@@ -10,7 +8,7 @@
         let names;
         if (arguments.length === 0) names = Object.getOwnPropertyNames(this); // no arguments
         else if (arguments.length === 1 && Array.isArray(arguments[0])) names = arguments[0]; // single array argument
-        else names = Array.prototype.splice.call(arguments, 0); // names in the argument list
+        else names = Array.prototype.slice.call(arguments, 0); // names in the argument list
         // return new Properties object
         return new Properties(this, names);
     }
@@ -18,7 +16,7 @@
     Object.defineProperty(Object.prototype, 'properties', {
         value: properties,
         enumerable: false,
-        writeable: true,
+        writable: true,
         configurable: true
     });
     // constructor function invoked by properties() function above
@@ -27,17 +25,14 @@
         this.obj = obj; // object properties belong to
         this.names = names;
     }
-    // make properties represented by an object nonenumerable
+    // make properties represented by an object non-enumerable
     Properties.prototype.hide = function() {
 
         const obj = this.obj;
-        this.names.forEach(function(name) {
-            
-            if (obj.hasOwnProperty(name)) Object.defineProperty(obj, name, {enumerable: false});
-        });
+        this.names.forEach(function(name) {if (obj.hasOwnProperty(name)) Object.defineProperty(obj, name, {enumerable: false});});
         return this;
     };
-    // make properties represented by an object read-only and nonconfigurable
+    // make properties represented by an object read-only and non-configurable
     Properties.prototype.freeze = function() {
 
         const obj = this.obj;
@@ -63,7 +58,7 @@
         return descriptors;
     };
     // return formatted list of properties, listing the name, value and attributes
-    // 'permanent' means nonconfigurable, 'readonly' means nonwritable, 'hidden means nonenumerable
+    // 'permanent' means non-configurable, 'readonly' means non-writable, 'hidden means non-enumerable
     Properties.prototype.toString = function() {
 
         const obj = this.obj;
@@ -82,6 +77,6 @@
         }
         return `{\n ${lines.join(',\n')}\n}`;
     };
-    // finally make instance methods of the prototype object above nonenumerable
+    // finally make instance methods of the prototype object above non-enumerable
     Properties.prototype.properties().hide();
 })();

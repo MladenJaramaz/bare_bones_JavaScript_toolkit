@@ -1,5 +1,4 @@
 'use strict';
-
 // return the class of an object
 function determineClass(value) {return Object.prototype.toString.call(value).slice(8, -1);}
 // determine type of a value
@@ -10,7 +9,7 @@ function determineClass(value) {return Object.prototype.toString.call(value).sli
 // otherwise, return 'Object'
 function determineType(value) {
 
-    if (value === null) return null;
+    if (value === null) return 'null';
     if (value !== value) return 'NaN'; // NaN is the only value not equal to itself
     const valueType = typeof value;
     if (valueType !== 'object') return valueType;
@@ -19,9 +18,9 @@ function determineType(value) {
     const objectConstructor = value.constructor;
     return typeof objectConstructor === 'function' ? objectConstructor.getName() : 'Object';
 }
-// this function does not work with built-in classes like Array, because their method are non-enumerable
-// furthermore, this function only confirms existence of matching methods, but does not give informations on what those methods do, or what arguments they expect
-// this way API user is entrusted to use API in a correct way, in contrast to writting API  with stronger type-checking
+// this function does not work with built-in classes like Array, because their methods are non-enumerable
+// this function confirms existence of matching methods, but does not give information on what those methods do, or what arguments they expect
+// this way API user is entrusted to use API in a correct way, in contrast to writing API  with stronger type-checking
 function duckTypingAPI(obj1, obj2) {
     // if obj1 and ob1 2 are not an objects, throw TypeError()
     const arg1Type = determineType(obj1);
@@ -34,7 +33,7 @@ function duckTypingAPI(obj1, obj2) {
     } 
     // if code reaches this point both arguments are objects (this includes also arrays and functions)
     for (let prop in obj2) {
-        if (typeof obj2[prop] !== 'function') continue; // skip non-mehods properties
+        if (typeof obj2[prop] !== 'function') continue; // skip non-method properties
         if (typeof obj1[prop] !== 'function') return false; 
     }
     return true;
