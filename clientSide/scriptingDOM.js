@@ -5,10 +5,14 @@
 // if end & interval & start are omitted, invoke function immediately and never again
 // start, interval & end are specified in ms
 function invoker(func, start, interval, end) {
-    
+
     let timeoutRef;
-    if (!start) start = 0; // defaut to 0ms
-    if (arguments.length <= 2) timeoutRef = setTimeout(func, start); // single invocation after start ms
+    if (!start) start = 0; // default to 0ms
+    if (arguments.length <= 2)
+        {
+             console.log(`invoker called with single invocation after ${start} ms`); 
+             timeoutRef = setTimeout(func, start); // single invocation after start ms
+        }
     else timeoutRef = setTimeout(repeater, start); // start with repetitions after start ms
     function repeater() {
         // invoked by setTimeout() above
@@ -21,12 +25,12 @@ function invoker(func, start, interval, end) {
         }, end);
     }
 }
-// parse ampersend-separated name=value argument pairs from URL query string
+// parse ampersand-separated name=value argument pairs from URL query string
 function parseUrlArgs() {
 
     const args = {};
     const query = location.search.substring(1); // remove '?' from string
-    const pairs = query.split('&'); // split at ampersends
+    const pairs = query.split('&'); // split at ampersands
     const pairsCount = pairs.length;
     for (let i = 0; i < pairsCount; i++) {
         const pair = pairs[i];
@@ -39,7 +43,7 @@ function parseUrlArgs() {
     }
     return args;
 }
-// function accepting optional number of string arguments and treats them likd element id's
+// function accepting optional number of string arguments and treats them like element id's
 // if any argument turns out to be non-valid id an error is thrown
 function getElements(/* ids */) {
 
@@ -53,66 +57,58 @@ function getElements(/* ids */) {
     }
     return elements;
 }
-// return a nth ancsestor of an element, or null if not found
-// if n is 0, or ommited, return the element itself
-function geNthtAncestor(element, n) {
+// return a nth ancestor of an element, or null if not found
+// if n is 0, or omitted, return the element itself
+function getNthAncestor(element, n) {
 
-    if (!n) return element; // return the element itself
-    if (n < 0) throw new Error('Negative ancestor index.');
-    let ancestor = element;
-    for (let i = 0; i < n; i++) {
-        ancestor = ancestor.parentNode;
-        if (!ancestor) return null;
-    }
-    return ancestor;
+    if (isNaN(n)) throw new Error('Ancestor index can be only numbers.');
+    if (n <= 0) return element; // return the element itself
+    while(n-- > 0 && element) element = element.parentNode;
+    if (!element || element.nodeType !== 1) return null;
+    return element;
 }
+// return a nth child of an element, or null if it does not exist
+// if n is 0, or omitted, return the element itself
+// if n is positive, 1 means first child, 2 means second child, etc.
+// if n is negative, -1 means last child, -2 means second to last child, etc. 
+/**
+* Return the nth element child of e, or null if it doesn't have one.
+* Negative values of n count from the end. 0 means the first child, but
+* -1 means the last child, -2 means the second to last, and so on.
+*/
+function getNthChild(element, n) {
+    
+    const elementChildren = element.children;
+    const elementChildrenCount = elementChildren.length;
+    if (element.children) { // If children array exists
+        if (n === 0) return null; // If n is 0, no child
+        if (n < 0){
+            n += elementChildrenCount; // Convert negative n to array index 
+            if (n < 0) return null; // If still negative, no child
+            if (n >= elementChildrenCount) return null; // If n is too large, no child
+            else return elementChildren[n]; // Return specified child
+        }
+        return elementChildren[n - 1]; // Return specified child
+    }
+}  
+
 // return a nth sibling of an element
-// if n is 0, or ommited, return the element itself
+// if n is 0, or omitted, return the element itself
 // if n is positive, return the nth sibling after the element
 // if n is negative, return the nth sibling before the element
 function getNthSibling(element, n) {
 
-    if (!n) return element; // return the element itself
-    if (n < 0) {
-        n = -n; // make n positive
-        for (let i = 0; i < n; i++) {
-            const possibleSibling = element.previousSibling;
-            if (possibleSibling.nodeType !== 1) continue; // skip non-element nodes
-            if (!possibleSibling) return null;
-            element = possibleSibling;
-        }
-        return element;
-    } else {
-        for (let i = 0; i < n; i++) {
-            const possibleSibling = element.nextSibling;
-            if (possibleSibling.nodeType !== 1) continue; // skip non-element nodes
-            if (!possibleSibling) return null;
-            element = possibleSibling;
-        }
-        return element;
-    }
+    if (isNaN(n)) throw new Error('Sibling index can be only numbers.');
+    if (n === 0) return element; // return the element itself
+    if (n > 0) while(n-- > 0 && element) element = element.nextElementSibling;
+    else if (n < 0) while(n++ < 0 && element) element = element.previousElementSibling;
+    if (!element || element.nodeType !== 1) return null;
+    return element;
 }
-// return a nth child of an element, or null if it does not exist
-// if n is 0, or ommited, return the element itself
-// if n is positive, 1 means first child, 2 means second child, etc.
-// if n is negative, -1 means last child, -2 means second to last child, etc.   
-function getNthChild(element, n) {
 
-    if (!n) return element; // return the element itself
-    const elementChldElements = element.children;
-    const elementChldElementsCount = elementChldElements.length;
-    if (elementChldElementsCount === 0) return null; // no children
-    if (n < 0) {
-        n = -n; // make n positive
-        if (n > elementChldElementsCount) return null; // no such child
-        return elementChldElements[elementChldElementsCount - n];
-    } else {
-        if (n > elementChldElementsCount) return null; // no such child
-        return elementChldElements[n - 1];
-    }
-}
+
 // inject inside a parent element a child element
-// if n is 0, or ommited, append it at the end of the element
+// if n is 0, or omitted, append it at the end of the element
 // if n is positive, 1 means first child, 2 means second child, etc.
 // if n is negative, -1 means last child, -2 means second to last child, etc.   
 function injectChild(parentElement, childElement, n) {
@@ -121,16 +117,16 @@ function injectChild(parentElement, childElement, n) {
         parentElement.appendChild(childElement); // append at the end
         return;
     } 
-    if (isNaN(n)) throw new Error(' Child index can be only numbers.');
-    const elementChldElements = parentElement.children;
-    const elementChldElementsCount = elementChldElements.length;
+    if (isNaN(n)) throw new Error('Child index can be only numbers.');
+    const elementChildElements = parentElement.children;
+    const elementChildElementsCount = elementChildElements.length;
     if (n < 0) {
         n = -n; // make n positive
-        if (n > elementChldElementsCount) throw new Error('No such child.');
-        parentElement.insertBefore(childElement, elementChldElements[elementChldElementsCount - n]);
+        if (n > elementChildElementsCount) throw new Error('No such child.');
+        parentElement.insertBefore(childElement, elementChildElements[elementChildElementsCount - n]);
     } else {
-        if (n > elementChldElementsCount) throw new Error('No such child.');
-        parentElement.insertBefore(childElement, elementChldElements[n]);
+        if (n > elementChildElementsCount) throw new Error('No such child.');
+        parentElement.insertBefore(childElement, elementChildElements[n]);
     }
 }
 // sort the rows of a table's first tbody element according to the value of the nth cell
@@ -193,4 +189,9 @@ function reverseChildren(element) {
     }
     element.appendChild(tempContainer); // append the temporary container to the element
 }
-
+Element.prototype.next = function() {
+if (this.nextElementSibling) return this.nextElementSibling;
+var sib = this.nextSibling;
+while(sib && sib.nodeType !== 1) sib = sib.nextSibling;
+return sib;
+};
