@@ -34,7 +34,7 @@ function tocGenerator() {
         }
         return headersContainer;
     }
-    // intialize an array to keep track of section numbers
+    // initialize an array to keep track of section numbers
     const sectionNumbers = [0, 0, 0, 0, 0, 0];
     // Loop through the headers that have been found
     const headersCount = headers.length;

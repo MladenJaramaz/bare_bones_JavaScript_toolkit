@@ -8,11 +8,7 @@ function invoker(func, start, interval, end) {
 
     let timeoutRef;
     if (!start) start = 0; // default to 0ms
-    if (arguments.length <= 2)
-        {
-             console.log(`invoker called with single invocation after ${start} ms`); 
-             timeoutRef = setTimeout(func, start); // single invocation after start ms
-        }
+    if (arguments.length <= 2) timeoutRef = setTimeout(func, start); // single invocation after start ms
     else timeoutRef = setTimeout(repeater, start); // start with repetitions after start ms
     function repeater() {
         // invoked by setTimeout() above
@@ -42,6 +38,14 @@ function parseUrlArgs() {
         args[name] = value;
     }
     return args;
+}
+// Asynchronously load and execute a script from a specified URL
+function loadasync(url) {
+
+    const head = document.getElementsByTagName("head")[0]; // Find document <head>
+    const s = document.createElement("script"); // Create a <script> element
+    s.src = url; // Set its src attribute
+    head.appendChild(s); // Insert the <script> into head
 }
 // function accepting optional number of string arguments and treats them like element id's
 // if any argument turns out to be non-valid id an error is thrown
@@ -106,64 +110,12 @@ function getNthSibling(element, n) {
     return element;
 }
 
+// Insert the child node into parent so that it becomes child node n
+function insertChild(parent, child, n) {
 
-// inject inside a parent element a child element
-// if n is 0, or omitted, append it at the end of the element
-// if n is positive, 1 means first child, 2 means second child, etc.
-// if n is negative, -1 means last child, -2 means second to last child, etc.   
-function injectChild(parentElement, childElement, n) {
-
-    if (!n) { 
-        parentElement.appendChild(childElement); // append at the end
-        return;
-    } 
-    if (isNaN(n)) throw new Error('Child index can be only numbers.');
-    const elementChildElements = parentElement.children;
-    const elementChildElementsCount = elementChildElements.length;
-    if (n < 0) {
-        n = -n; // make n positive
-        if (n > elementChildElementsCount) throw new Error('No such child.');
-        parentElement.insertBefore(childElement, elementChildElements[elementChildElementsCount - n]);
-    } else {
-        if (n > elementChildElementsCount) throw new Error('No such child.');
-        parentElement.insertBefore(childElement, elementChildElements[n]);
-    }
-}
-// sort the rows of a table's first tbody element according to the value of the nth cell
-// use comparator function if one is specified, otherwise compare values alphabetically
-function sortTableRows(table, n, comparator) {
-
-    const tbody = table.tBodies[0]; // get the first tbody element
-    const rows = Array.from(tbody.rows); // convert HTMLCollection to array
-    rows.sort((row1, row2) => {
-        
-        const cell1 = row1.cells[n -1];
-        const cell2 = row2.cells[n -1];
-        let value1 = cell1.textContent || cell1.innerText;
-        let value2 = cell2.textContent || cell2.innerText;
-        if (comparator) return rows.sort(comparator);
-        else {
-            if (value1 < value2) return -1;
-            if (value1 > value2) return 1;
-            return 0;
-        }
-    });      
-     // append the sorted rows to the tbody element, and automatically remove them from their old position
-    const rowsCount = rows.length;
-    for (let i = 0; i < rowsCount; i++) tbody.appendChild(rows[i]);     
-}
-// make th elements in a table header clickable, if any are found 
-// clickking on them sorts table by their column
-function makeTableHeaderClickable(table) {
-
-    const thead = table.tHead; // get the first thead element
-    if (!thead) return; // no header
-    const thElements = thead.getElementsByTagName('th'); // get all th elements
-    const thElementsCount = thElements.length;
-    for (let i = 0; i < thElementsCount; i++) {
-        const thElement = thElements[i];
-        thElement.addEventListener('click', () => {sortTableRows(table, i + 1);});
-    }
+    if (n < 0 || n > parent.childNodes.length) throw new Error("invalid index");
+    else if (n == parent.childNodes.length) parent.appendChild(child);
+    else parent.insertBefore(child, parent.childNodes[n]);
 }
 // reverse the order of the childNodes of an element
 function reverseChildNodes(element) {
@@ -189,9 +141,40 @@ function reverseChildren(element) {
     }
     element.appendChild(tempContainer); // append the temporary container to the element
 }
-Element.prototype.next = function() {
-if (this.nextElementSibling) return this.nextElementSibling;
-var sib = this.nextSibling;
-while(sib && sib.nodeType !== 1) sib = sib.nextSibling;
-return sib;
-};
+// sort the rows of a table's first tbody element according to the value of the nth cell
+// use comparator function if one is specified, otherwise compare values alphabetically
+function sortTableRows(table, n, comparator) {
+
+    const tbody = table.tBodies[0]; // get the first tbody element
+    const rows = Array.from(tbody.rows); // convert HTMLCollection to array
+    rows.sort((row1, row2) => {
+        
+        const cell1 = row1.cells[n -1];
+        const cell2 = row2.cells[n -1];
+        let value1 = cell1.textContent || cell1.innerText;
+        let value2 = cell2.textContent || cell2.innerText;
+        if (comparator) return rows.sort(comparator);
+        else {
+            if (value1 < value2) return -1;
+            if (value1 > value2) return 1;
+            return 0;
+        }
+    });      
+     // append the sorted rows to the tbody element, and automatically remove them from their old position
+    const rowsCount = rows.length;
+    for (let i = 0; i < rowsCount; i++) tbody.appendChild(rows[i]);     
+}
+// make th elements in a table header clickable, if any are found 
+// clicking on them sorts table by their column
+function makeTableHeaderClickable(table) {
+
+    const thead = table.tHead; // get the first thead element
+    if (!thead) return; // no header
+    const thElements = thead.getElementsByTagName('th'); // get all th elements
+    const thElementsCount = thElements.length;
+    for (let i = 0; i < thElementsCount; i++) {
+        const thElement = thElements[i];
+        thElement.addEventListener('click', () => {sortTableRows(table, i + 1);});
+    }
+}
+

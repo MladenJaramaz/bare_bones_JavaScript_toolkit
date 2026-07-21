@@ -1,17 +1,44 @@
 'use strict';
 // replace a Text Node with a <b> element containing the text of the Text Node 
-function emboldTextNode(textNode) {
+function emboldenTextNode(textNode) {
 
     const parentElement = textNode.parentNode;
     const bElement = document.createElement('b');
     bElement.textContent = textNode.nodeValue;
     parentElement.replaceChild(bElement, textNode);
 }
+// scale the text of the element by specified factor, in specified duration
+// if fourth argument is provided it will be treated like a callback
+function scaleText(element, factor, duration, callback) {
+    // handle arguments
+    if (typeof element === 'string') element = document.getElementById(element);
+    factor = Number(factor);
+    duration = Number(duration);
+    if (isNaN(factor)) factor = 1.5;
+    if (isNaN(duration)) duration = 500;
+    if (typeof callback !== 'function') callback = function(){console.log('scale text animation complete')};
+    
+    const originalFontSize = window.getComputedStyle(element).fontSize; // get the original font size
+    const startTime = Date.now();
+    animate();
+
+    function animate() {
+        const progress = (Date.now() - startTime) / duration; // calculate the progress of the animation
+        if (progress < 1) {
+            const newFontSize = parseFloat(originalFontSize) * (1 + (factor - 1) * progress); // calculate the new font size
+            element.style.fontSize = newFontSize + 'px'; // set the new font size
+            setTimeout(animate, 25); // request the next frame of the animation
+        } else {
+            element.style.fontSize = parseFloat(originalFontSize) * factor + 'px'; // ensure the final font size is correct
+            callback();
+        }
+    }
+}  
 // convert element to relative position and add animation
 // first argument is the element object or element id
 // second argument defines the length of the animation, if not present it defaults to 5px
 // third argument defines the duration of the animation, if not present it defaults to 500ms
-// is fourth argument is provided it will be treated like a callback
+// if fourth argument is provided it will be treated like a callback
 function shake (element, distance, duration, callback) {
     // handle arguments
     if (typeof element === 'string') element = document.getElementById(element);
@@ -42,7 +69,7 @@ function shake (element, distance, duration, callback) {
 }
 // fade an element from fully opaque to fully transparent over specified duration
 // assume element is fully opaque at the start
-// is third argument is provided it will be treated like a callback
+// if third argument is provided it will be treated like a callback
 function fadeOut(element, duration, callback) {
     // handle arguments
     if (typeof element === 'string') element = document.getElementById(element);
@@ -62,33 +89,6 @@ function fadeOut(element, duration, callback) {
             setTimeout(animate, 25); // request the next frame of the animation
         } else {
             element.style.opacity = '0'; // ensure the element is fully transparent at the end
-            callback();
-        }
-    }
-}
-// scale the text of the element by specified factor, in specified duration
-// if fourth argument is provided it will be treated like a callback
-function scaleText(element, factor, duration, callback) {
-    // handle arguments
-    if (typeof element === 'string') element = document.getElementById(element);
-    factor = Number(factor);
-    duration = Number(duration);
-    if (isNaN(factor)) factor = 1.5;
-    if (isNaN(duration)) duration = 500;
-    if (typeof callback !== 'function') callback = function(){console.log('scale text animation complete')};
-    
-    const originalFontSize = window.getComputedStyle(element).fontSize; // get the original font size
-    const startTime = Date.now();
-    animate();
-
-    function animate() {
-        const progress = (Date.now() - startTime) / duration; // calculate the progress of the animation
-        if (progress < 1) {
-            const newFontSize = parseFloat(originalFontSize) * (1 + (factor - 1) * progress); // calculate the new font size
-            element.style.fontSize = newFontSize + 'px'; // set the new font size
-            setTimeout(animate, 25); // request the next frame of the animation
-        } else {
-            element.style.fontSize = parseFloat(originalFontSize) * factor + 'px'; // ensure the final font size is correct
             callback();
         }
     }
@@ -115,9 +115,7 @@ function scaleBackgroundColor(element, factor, duration, callback) {
         delete individualColorValues[3]; // remove alpha value from the array
     }
     const rgbValues = `${individualColorValues[0]}, ${individualColorValues[1]}, ${individualColorValues[2]}, `;
-    console.log(alpha)
     let goalAlpha = alpha + alpha * factor;
-    console.log(goalAlpha)
     if (goalAlpha < 0) goalAlpha = 0; // ensure alpha does not go below 0
     if (goalAlpha > 1) goalAlpha = 1; // ensure alpha does not go above 1
     const alphaChange = goalAlpha - alpha; // calculate the change in alpha
@@ -136,28 +134,6 @@ function scaleBackgroundColor(element, factor, duration, callback) {
             element.style.backgroundColor = `rgba(${rgbValues} ${goalAlpha})`; // ensure the final background color is correct
             callback();
         }
-    }
-}
-// function that disables selected stylesheet
-// if passed a number, it will disable the stylesheet at that index in document.styleSheets
-// if passed a string, it will disable the stylesheet with that id
-function disableStylesheet(stylesheet) {
-
-    if (typeof stylesheet === 'number') {
-        if (stylesheet < 0 || stylesheet >= document.styleSheets.length) {
-            console.error('Invalid stylesheet index');
-            return;
-        }
-        document.styleSheets[stylesheet].disabled = true;
-    } else if (typeof stylesheet === 'string') {
-        const styleSheet = document.getElementById(stylesheet);
-        if (!styleSheet) {
-            console.error(`Stylesheet with id '${stylesheet}' not found`);
-            return;
-        }
-        styleSheet.disabled = true;
-    } else {
-        console.error('Invalid argument: must be a number or a string');
     }
 }
 // add a new stylesheet to the document and populate it with the provided CSS rules
@@ -181,5 +157,27 @@ function addStylesheet(rules) {
             styleString += `} `;
         }
         style.appendChild(document.createTextNode(styleString));
+    }
+}
+// function that disables selected stylesheet
+// if passed a number, it will disable the stylesheet at that index in document.styleSheets
+// if passed a string, it will disable the stylesheet with that id
+function disableStylesheet(stylesheet) {
+
+    if (typeof stylesheet === 'number') {
+        if (stylesheet < 0 || stylesheet >= document.styleSheets.length) {
+            console.error('Invalid stylesheet index');
+            return;
+        }
+        document.styleSheets[stylesheet].disabled = true;
+    } else if (typeof stylesheet === 'string') {
+        const styleSheet = document.getElementById(stylesheet);
+        if (!styleSheet) {
+            console.error(`Stylesheet with id '${stylesheet}' not found`);
+            return;
+        }
+        styleSheet.disabled = true;
+    } else {
+        console.error('Invalid argument: must be a number or a string');
     }
 }
