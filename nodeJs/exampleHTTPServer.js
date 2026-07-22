@@ -4,12 +4,11 @@ const fs = require('fs');
 const http = require('http');
 const url = require('url');
 
-
-
 const port = 3000;
 const server = new http.Server(); // create a new HTTP server
 server.listen(port); // run it on port 3000
 server.on('connection', () => {console.log(`Listening on ${port}.`);});
+
 server.on('request', (request, response) => {
 
     const parsedUrl = url.parse(request.url); // parse requested url
