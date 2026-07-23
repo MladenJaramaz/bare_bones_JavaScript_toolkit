@@ -1,5 +1,5 @@
 'use strict';
-// make an asynchonous HTTP GET request for the specified URL
+// make an asynchronous HTTP GET request for the specified URL
 // pass the HTTP status, headers and response body to the specified callback function 
 exports.get = (requestUrl, callback) => {
 
@@ -12,8 +12,8 @@ exports.get = (requestUrl, callback) => {
     const client = require('http').createClient(port, hostname);
     const request = client.request('GET', pathname, /* Request headers */ {'Host': hostname});
     request.end();
-    // handle response as it arives
-    request.on('resposne', (response) => {
+    // handle response as it arrives
+    request.on('response', (response) => {
         // set encoding, so response body is returned as text, not bytes
         response.setEncoding('utf-8');
         // add to response body as data arrives
@@ -23,7 +23,7 @@ exports.get = (requestUrl, callback) => {
         response.on('end', () => {if (callback) callback(response.statusCode, response.headers, body)});
     });
 };
-// make an asynchonous HTTP POST request for the specified URL
+// make an asynchronous HTTP POST request for the specified URL
 exports.post = (requestUrl, data, callback) => {
 
     const url = require('url');
