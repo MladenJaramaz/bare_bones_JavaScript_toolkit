@@ -27,6 +27,18 @@ const whenReady = (function() {
         else funcs.push(func);
     }
 }());
+// Register the function to run when the document finishes loading.
+// If the document has already loaded, run it asynchronously ASAP.
+function onLoad(func) {
+
+    if (onLoad.loaded) window.setTimeout(func, 0); // If document is already loaded queue func to be run as soon as possible
+    else if (window.addEventListener) window.addEventListener('load', func, false);// Standard event registration method
+    else if (window.attachEvent) window.attachEvent('onload', func); // IE8 and earlier use this instead
+}
+// Start by setting a flag that indicates that the document is not loaded yet.
+onLoad.loaded = false;
+// And register a function to set the flag when the document does load.
+onLoad(function() {onLoad.loaded = true;});
 // drag() is designed to be used as an event handler for a onmousedown event
 // subsequent mousemove events are used to drag an element around the screen
 // mouseup event will terminate the drag operation
@@ -253,7 +265,7 @@ whenReady(function() {
         list.ondragend = function(event) {
 
             const target = event.target || event.srcElement;
-            if (event.dataTransfer.dropEffect = 'copyMove') target.parentNode.removeChild(target);
+            if (event.dataTransfer.dropEffect === 'copyMove') target.parentNode.removeChild(target);
         };
         // utility function used in ondragenter and ondragleave
         function isChild(element, potentialParent) {
@@ -323,3 +335,23 @@ whenReady(function() {
         }
     }
 });
+// To create image rollovers use the data-rollover attribute on any <img> element to specify the URL of rollover image. 
+// For example: <img src="normal_image.png" data-rollover="rollover_image.png">
+onLoad(function() { // Everything in one anonymous function6
+    // Loop through all images, looking for the data-rollover attribute
+    const documentImages = document.images;
+    const documentImagesLength = documentImages.length;
+    for(let i = 0; i < documentImagesLength; i++) {
+        const img = documentImages[i];
+        const rollover = img.getAttribute('data-rollover');
+        if (!rollover) continue; // Skip images without data-rollover
+        // Ensure that the rollover image is in the cache
+        (new Image()).src = rollover;
+        // Define an attribute to remember the default image URL
+        img.setAttribute('data-rollout', img.src);
+        // Register the event handlers that create the rollover effect
+        img.onmouseover = function() {this.src = this.getAttribute('data-rollover');};
+        img.onmouseout = function() {this.src = this.getAttribute('data-rollout');};
+    }
+});
+
