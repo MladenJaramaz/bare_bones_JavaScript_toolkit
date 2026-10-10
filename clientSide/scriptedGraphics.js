@@ -83,113 +83,101 @@ function pieChart(data, width, height, cx, cy, r, colors, labels, lx, ly) {
     return chart;
 }
 /* ============================== Canvas ============================== */
+// Revert to the last saved graphics state, but don't pop the stack.
+CanvasRenderingContext2D.prototype.revert = function() {
+
+    this.restore(); // Restore the old graphics state.
+    this.save(); // Save it again so we can go back to it.
+    return this; // Allow method chaining.
+};
+// Set the graphics attributes specified by the properties of the object obj.
+// Or, if no argument is passed, return the current attributes as an object.
+// Note that this does not handle the transformation or clipping region.
+CanvasRenderingContext2D.prototype.attrs = function(obj) {
+
+    if (obj) {
+        for(let a in obj) this[a] = obj[a]; // For each property in obj, Set it as a graphics attribute
+        return this; // Enable method chaining
+    }
+    else return {
+        fillStyle: this.fillStyle, font: this.font,
+        globalAlpha: this.globalAlpha,
+        globalCompositeOperation: this.globalCompositeOperation,
+        lineCap: this.lineCap, lineJoin: this.lineJoin,
+        lineWidth: this.lineWidth, miterLimit: this.miterLimit,
+        textAlign: this.textAlign, textBaseline: this.textBaseline,
+        shadowBlur: this.shadowBlur, shadowColor: this.shadowColor,
+        shadowOffsetX: this.shadowOffsetX, shadowOffsetY: this.shadowOffsetY,
+        strokeStyle: this.strokeStyle
+    };
+};
 // Define a regular polygon with n sides, centered at (x,y) with radius r.
 // The vertices are equally spaced along the circumference of a circle.
 // Put the first vertex straight up or at the specified angle.
-// Rotate clockwise, unless the last argument is true.
-function polygon(c,n,x,y,r,angle,counterclockwise) {
-    var canvas = document.getElementById("my_canvas_id");
-var c = canvas.getContext('2d');
-angle = angle || 0;
-counterclockwise = counterclockwise || false;
-c.moveTo(x + r*Math.sin(angle), // Begin a new subpath at the first vertex
-y - r*Math.cos(angle)); // Use trigonometry to compute position
-var delta = 2*Math.PI/n; // Angular distance between vertices
-for(var i = 1; i < n; i++) { // For each of the remaining vertices
-angle += counterclockwise?-delta:delta; // Adjust angle
-c.lineTo(x + r*Math.sin(angle), // Add line to next vertex
-y - r*Math.cos(angle));
+// Rotate clockwise, unless the counterclockwise argument is true.
+function polygon(id, n, x, y, r, angle, counterclockwise, fillColor, strokeColor, lineWidth) {
+
+    const canvas = document.getElementById(id);
+    const context = canvas.getContext('2d');
+    angle = angle || 0;
+    counterclockwise = counterclockwise || false;
+    // Start a new path and add polygon subpaths
+    context.beginPath();
+    // Begin a new subpath at the first vertex
+    // Use trigonometry to compute position
+    context.moveTo(x + r * Math.sin(angle), y - r * Math.cos(angle)); 
+    const delta = 2 * Math.PI / n; // Angular distance between vertices
+    for(let i = 1; i < n; i++) { // For each of the remaining vertices
+        angle += counterclockwise ? -delta : delta; // Adjust angle
+        context.lineTo(x + r * Math.sin(angle), y - r * Math.cos(angle)); // Add line to next vertex
+    }
+    context.closePath(); // Connect last vertex back to the first
+    // Set some properties that control how the graphics will look
+    context.fillStyle = fillColor;
+    context.strokeStyle = strokeColor; 
+    context.lineWidth = lineWidth; 
+    // Now draw all the polygons (each in its own subpath) with these calls
+    context.fill(); // Fill the shapes
+    context.stroke(); // And stroke their outlines
 }
-c.closePath(); // Connect last vertex back to the first
-}
-// Start a new path and add polygon subpaths
-c.beginPath();
-polygon(c, 3, 50, 70, 50); // Triangle
-polygon(c, 4, 150, 60, 50, Math.PI/4); // Square
-polygon(c, 5, 255, 55, 50); // Pentagon
-polygon(c, 6, 365, 53, 50, Math.PI/6); // Hexagon
-polygon(c, 4, 365, 53, 20, Math.PI/4, true); // Small square inside the hexagon
-// Set some properties that control how the graphics will look
-c.fillStyle = "#ccc"; // Light gray interiors
-c.strokeStyle = "#008"; // outlined with dark blue lines
-c.lineWidth = 5; // five pixels wide.
-// Now draw all the polygons (each in its own subpath) with these calls
-c.fill(); // Fill the shapes
-c.stroke(); // And stroke their outlines
-
-
-
-
-// Revert to the last saved graphics state, but don't pop the stack.
-CanvasRenderingContext2D.prototype.revert = function() {
-this.restore(); // Restore the old graphics state.
-this.save(); // Save it again so we can go back to it.
-return this; // Allow method chaining.
-};
-// Set the graphics attributes specified by the properties of the object o.
-// Or, if no argument is passed, return the current attributes as an object.
-// Note that this does not handle the transformation or clipping region.
-CanvasRenderingContext2D.prototype.attrs = function(o) {
-if (o) {
-for(var a in o) // For each property in o
-this[a] = o[a]; // Set it as a graphics attribute
-return this; // Enable method chaining
-}
-else return {
-fillStyle: this.fillStyle, font: this.font,
-globalAlpha: this.globalAlpha,
-globalCompositeOperation: this.globalCompositeOperation,
-lineCap: this.lineCap, lineJoin: this.lineJoin,
-lineWidth: this.lineWidth, miterLimit: this.miterLimit,
-textAlign: this.textAlign, textBaseline: this.textBaseline,
-shadowBlur: this.shadowBlur, shadowColor: this.shadowColor,
-shadowOffsetX: this.shadowOffsetX, shadowOffsetY: this.shadowOffsetY,
-strokeStyle: this.strokeStyle
-};
-};
-
-
-
-var deg = Math.PI/180; // For converting degrees to radians
 // Draw a level-n Koch Snowflake fractal on the canvas context c,
 // with lower-left corner at (x,y) and side length len.
-function snowflake(c, n, x, y, len) {
-c.save(); // Save current transformation
-c.translate(x,y); // Translate origin to starting point
-c.moveTo(0,0); // Begin a new subpath at the new origin
-leg(n); // Draw the first leg of the snowflake
-c.rotate(-120*deg); // Now rotate 120 degrees counterclockwise
-leg(n); // Draw the second leg
-c.rotate(-120*deg); // Rotate again
-leg(n); // Draw the final leg
-c.closePath(); // Close the subpath
-c.restore(); // And restore original transformation
-// Draw a single leg of a level-n Koch snowflake.
-// This function leaves the current point at the end of the leg it has
-// drawn and translates the coordinate system so the current point is (0,0).
-// This means you can easily call rotate() after drawing a leg.
-function leg(n) {
-c.save(); // Save the current transformation
-if (n == 0) { // Nonrecursive case:
-c.lineTo(len, 0); // Just draw a horizontal line
-} // _ _
-else { // Recursive case: draw 4 sub-legs like: \/
-c.scale(1/3,1/3); // Sub-legs are 1/3rd the size of this leg
-leg(n-1); // Recurse for the first sub-leg
-c.rotate(60*deg); // Turn 60 degrees clockwise
-leg(n-1); // Second sub-leg
-c.rotate(-120*deg); // Rotate 120 degrees back
-leg(n-1); // Third sub-leg
-c.rotate(60*deg); // Rotate back to our original heading
-leg(n-1); // Final sub-leg
+function snowflake(id, n, x, y, len) {
+
+    const deg = Math.PI / 180; // convert degrees to radians
+    const canvas = document.getElementById(id);
+    const context = canvas.getContext('2d');
+    context.save(); // Save current transformation
+    context.translate(x, y); // Translate origin to starting point
+    context.moveTo(0, 0); // Begin a new subpath at the new origin
+    leg(n); // Draw the first leg of the snowflake
+    context.rotate(-120 * deg); // Now rotate 120 degrees counterclockwise
+    leg(n); // Draw the second leg
+    context.rotate(-120 * deg); // Rotate again
+    leg(n); // Draw the final leg
+    context.closePath(); // Close the subpath
+    context.restore(); // And restore original transformation
+    context.stroke(); // Stroke this very complicated path
+    // Draw a single leg of a level-n Koch snowflake.
+    // This function leaves the current point at the end of the leg it has
+    // drawn and translates the coordinate system so the current point is (0,0).
+    // This means you can easily call rotate() after drawing a leg.
+    function leg(n) {
+
+        context.save(); // Save the current transformation
+        if (n == 0) context.lineTo(len, 0); // Nonrecursive case: just draw a horizontal line
+        else { // Recursive case: draw 4 sub-legs like: \/
+            context.scale(1/3, 1/3); // Sub-legs are 1/3rd the size of this leg
+            leg(n - 1); // Recurse for the first sub-leg
+            context.rotate(60 * deg); // Turn 60 degrees clockwise
+            leg(n - 1); // Second sub-leg
+            context.rotate(-120 * deg); // Rotate 120 degrees back
+            leg(n - 1); // Third sub-leg
+            context.rotate(60 * deg); // Rotate back to our original heading
+            leg(n - 1); // Final sub-leg
+        }
+        context.restore(); // Restore the transformation
+        context.translate(len, 0); // But translate to make end of leg (0,0)
+    }
 }
-c.restore(); // Restore the transformation
-c.translate(len, 0); // But translate to make end of leg (0,0)
-}
-}
-snowflake(c,0,5,115,125); // A level-0 snowflake is an equilateral triangle
-snowflake(c,1,145,115,125); // A level-1 snowflake is a 6-sided star
-snowflake(c,2,285,115,125); // etc.
-snowflake(c,3,425,115,125);
-snowflake(c,4,565,115,125); // A level-4 snowflake looks like a snowflake!
-c.stroke(); // Stroke this very complicated path
+
